@@ -4,12 +4,27 @@
 {-# LANGUAGE PartialTypeSignatures #-}
 {-# OPTIONS_GHC -fno-warn-partial-type-signatures #-}
 
+-- | This module provides generators for JSON values
+--
+--   Since the Value data type is an ADT with different alternatives and a recursive data type
+--   we need to control how many of each variant (Number, String, Array, etc...) we generate
+--   and how deeply we recurse when generating arrays and objects which themselves contain Values.
+--
+--   A registry is used to store all the generators and the current generation configuration
+--
+--   In order to control the recursivity we tag the type of Values we generate:
+--
+--     - Tag "Simple" Value is for generating Null, Number, String, Boolean
+--     - Tag "Recurse" Value is for generating Array and Object
+--
+--   And we put a 'Depth` parameter in the registry. That parameter is decremented every time we generate values
+--   for an Array or an Object
 module Data.Registry.Hedgehog.AesonGenerators where
 
 import Data.Aeson
 import Data.Registry
-import Data.Registry.Internal.Types (Typed)
 import Data.Scientific as Scientific hiding (normalize)
+import Data.String (fromString)
 import Data.Vector as Vector (fromList)
 import Hedgehog as H
 import Hedgehog.Gen as Gen hiding (either)
@@ -21,9 +36,11 @@ genValue :: Gen Value
 genValue = genValueFor simpleGens
 
 -- | Generator for a JSON value with an adjusted set of generators
+--
 --   For example:
 --    - change the recursive depth of the generation: genValueWith (setDepth 5)
 --    - change the number of elements in an array or an object: genValueWith (setFieldsNb 5)
+--    - change the generator used to generate field names in an object: genValueWith (setFieldNames (elements ["a", "b", "c"]))
 --    - use a custom text generator: genValueWith (setGen myTextGenerator)
 --    - change the range used for generating numbers: genValueWith (setRange (linear @Int 0 20))
 genValueWith :: (Registry _ _ -> Registry _ _) -> Gen Value
@@ -54,10 +71,10 @@ recursiveGens overrides =
     gen genRecursiveValue
       -- generator for objects
       <: gen genObject
-      -- generator for arras
+      -- generator for arrays
       <: gen genArray
       -- generator for field names (up to 3 by default)
-      <: fun (listOf @Text 1 3)
+      <: fun (listOf @FieldName 1 3)
       -- generator for the elements of arrays or objects (up to 3 by default)
       <: fun (listOf @(Tag "Recurse" Value) 1 3)
       -- generator for a JSON value to be used in an object or an array
@@ -73,6 +90,7 @@ simpleGens =
     <: gen genSimpleValue
     <: gen genNumber
     <: gen genString
+    <: gen FieldName
     <: gen genText
     <: gen genBool
     <: gen genNull
@@ -82,38 +100,48 @@ simpleGens =
 
 -- * Individual generators
 
+-- | Create a generator for a Value which can possibly be recursive if it is an array or an object
 genRecursiveValue :: Tag "Array" Value -> Tag "Object" Value -> Tag "Simple" Value -> Gen Value
 genRecursiveValue arrayValue objectValue simpleValue = Gen.element [unTag arrayValue, unTag objectValue, unTag simpleValue]
 
+-- | Drop the tag on a Value
 untagSimpleValue :: Tag "Simple" Value -> Value
 untagSimpleValue = unTag
 
+-- | Create a generator for a non-recursive Value (i.e. not an array or an object)
 genSimpleValue :: Tag "Null" Value -> Tag "Bool" Value -> Tag "Number" Value -> Tag "String" Value -> Gen (Tag "Simple" Value)
 genSimpleValue nullValue boolValue numberValue stringValue =
   tag <$> Gen.element [unTag nullValue, unTag boolValue, unTag numberValue, unTag stringValue]
 
+-- | Generator for the Null value
 genNull :: Gen (Tag "Null" Value)
 genNull = pure (tag Null)
 
+-- | Generator for a boolean value
 genBool :: Gen (Tag "Bool" Value)
 genBool = tag . Bool <$> Gen.bool
 
+-- | Generator for some Text
 genText :: Range Int -> Gen Text
 genText range = Gen.text range Gen.alphaNum
 
+-- | Generator for a string value
 genString :: Text -> Tag "String" Value
 genString = tag . String
 
+-- | Generator for a number value
 genNumber :: Range Integer -> Gen (Tag "Number" Value)
 genNumber range = fmap tag $ Number <$> (scientific <$> Gen.integral range <*> pure 0)
 
+-- | Generator for an array value
 genArray :: [Tag "Recurse" Value] -> Tag "Array" Value
 genArray = tag . Array . Vector.fromList . fmap unTag
 
-genObject :: [Text] -> [Tag "Recurse" Value] -> Tag "Object" Value
-genObject fields values = tag . object $ zip fields (unTag <$> values)
+-- | Generator for an object value
+genObject :: [FieldName] -> [Tag "Recurse" Value] -> Tag "Object" Value
+genObject fields values = tag . object $ zip (fromString . toS . unFieldName <$> fields) (unTag <$> values)
 
--- * SUPPORT FUNCTION
+-- * Support functions
 
 -- | Simplification for funTo @Gen when adding a new function to the registry
 gen :: forall a b. (ApplyVariadic Gen a b, Typeable a, Typeable b) => a -> Typed b
@@ -121,11 +149,11 @@ gen = funTo @Gen
 
 -- | set a specific generator on top of the list of generators
 setGen :: (Typeable a) => Gen a -> Registry _ _ -> Registry _ _
-setGen = addFun
+setGen g r = fun g +: r
 
 -- | set a specific range on top of the list of generators
 setRange :: (Typeable a) => Range a -> Registry _ _ -> Registry _ _
-setRange = addFun
+setRange range r = fun range +: r
 
 -- | Generate a list of min' to max' elements
 listOf :: forall a. Int -> Int -> Gen a -> Gen [a]
@@ -139,9 +167,18 @@ setDepth d r = normalize $ val d +: r
 decrementDepth :: Registry _ _ -> Registry _ _
 decrementDepth = tweak (\(d :: Depth) -> d - 1)
 
--- | Simplification for setting the number of fields
+-- | Set the number of fields in an object
 setFieldsNb :: Int -> Registry _ _ -> Registry _ _
-setFieldsNb n r = fun (listOf @Text 1 n) +: r
+setFieldsNb n r = fun (listOf @FieldName 1 n) +: r
 
+-- | Set a generator for field names
+setFieldNames :: Gen FieldName -> Registry _ _ -> Registry _ _
+setFieldNames n r = fun n +: r
+
+-- | Depth of generated Values
 newtype Depth = Depth {unDepth :: Int}
   deriving newtype (Eq, Show, Num)
+
+-- | Newtype for the name of fields in an object
+newtype FieldName = FieldName {unFieldName :: Text}
+  deriving newtype (Eq, Show, Read)

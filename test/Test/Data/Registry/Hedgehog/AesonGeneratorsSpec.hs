@@ -8,6 +8,8 @@ module Test.Data.Registry.Hedgehog.AesonGeneratorsSpec where
 
 import Protolude
 import Test.Tasty.Hedgehogx
+-- uncomment to display the generated values
+-- import Data.Registry.Hedgehog.AesonGenerators
 
 -- | Sanity check
 test_json_simple_values = prop "generate simple json values" $ do

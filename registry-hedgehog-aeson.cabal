@@ -62,7 +62,7 @@ library
     , mmorph ==1.*
     , multimap ==1.*
     , protolude ==0.3.*
-    , registry ==0.2.*
+    , registry >=0.3 && <1
     , scientific ==0.3.*
     , tasty ==1.*
     , tasty-discover >=2 && <5
@@ -122,7 +122,7 @@ test-suite spec
     , mmorph ==1.*
     , multimap ==1.*
     , protolude ==0.3.*
-    , registry ==0.2.*
+    , registry >=0.3 && <1
     , registry-hedgehog
     , registry-hedgehog-aeson
     , scientific ==0.3.*
