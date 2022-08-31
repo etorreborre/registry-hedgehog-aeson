@@ -14,8 +14,8 @@
 --
 --   In order to control the recursivity we tag the type of Values we generate:
 --
---     - Tag "Simple" Value is for generating Null, Number, String, Boolean
---     - Tag "Recurse" Value is for generating Array and Object
+--     - @Tag "Simple" Value@ is for generating Null, Number, String, Boolean
+--     - @Tag "Recurse" Value@ is for generating Array and Object
 --
 --   And we put a 'Depth` parameter in the registry. That parameter is decremented every time we generate values
 --   for an Array or an Object
@@ -54,16 +54,16 @@ genNumberValue = unTag <$> make @(Gen (Tag "Number" Value)) simpleGens
 genValueFor :: Registry _ _ -> Gen Value
 genValueFor gens =
   case make @Depth gens of
-    -- if the depth is 0 generate a Value from the `Simple` Value generation
+    -- if the depth is 0 generate a Value from the "Simple" Value generation
     0 -> make @(Gen Value) gens
     -- if the depth is > 0 generate possibly recursive values like arrays and objects
     _ -> make @(Gen Value) $ recursiveGens (decrementDepth gens)
 
 -- | Set of generators for JSON values including recursive values like arrays and objects
---   In order to control the recursivity of the Value data type we produce several types
+--   In order to control the recursivity of the 'Value' data type we produce several types
 --   for JSON values using tags:
---     `Recurse Value` is a generated value to be used when generating an array or an object
---     `Simple Value` is a generated value that is either: a String, a Number, a Bool, a Null value
+--     @Recurse Value@ is a generated value to be used when generating an array or an object
+--     @Simple Value@ is a generated value that is either: a string, a number, a bool, a null value
 recursiveGens :: Registry _ _ -> Registry _ _
 recursiveGens overrides =
   normalize $
@@ -83,7 +83,7 @@ recursiveGens overrides =
       <: overrides
 
 -- | Set of generators for non-recursive JSON values
---   Those value are tagged as `Simple` but we can also extract a `Gen Value` from this list
+--   Those value are tagged as @Simple@ but we can also extract a @Gen Value@ from this list
 simpleGens :: Registry _ _
 simpleGens =
   gen untagSimpleValue
