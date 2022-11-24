@@ -1,11 +1,11 @@
-resolver: lts-19.21
+resolver: lts-20.1
 
 packages:
 - '.'
 
 extra-deps:
-  - registry-0.3.2.1
-  - registry-hedgehog-0.7.0.3
+  - registry-0.4.0.0
+  - registry-hedgehog-0.8.0.0
 
 flags: {}
 
