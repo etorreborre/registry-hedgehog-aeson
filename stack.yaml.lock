@@ -5,22 +5,22 @@
 
 packages:
 - completed:
-    hackage: registry-0.4.0.0@sha256:7cb3fdc83af372d5cfff93aaaa16b336c44e312a71b75233482c36e53750f5f7,5178
+    hackage: registry-0.6.3.0@sha256:5bb3d7c7f7542447b7887f34a8f9816fe2d1e494d815315741826911cd7a952a,5095
     pantry-tree:
-      sha256: 99205d3c7a7ca172d99a9e9692a1afd2af1208fe726d9e08c1f38783260bbdd5
-      size: 4160
+      sha256: a50d51a4f4b140709a6a64344dbaa4e0b4ab0666d476c4b48736ccbb7b70b499
+      size: 4070
   original:
-    hackage: registry-0.4.0.0
+    hackage: registry-0.6.3.0
 - completed:
-    hackage: registry-hedgehog-0.8.0.0@sha256:212aa1291b9c388a572154a8de071d33e81b16b92ca8ceca1967804df4bd3dd0,3541
+    hackage: registry-hedgehog-0.8.2.0@sha256:1d97f8b4ef571dce83282f181fc3c436400f35148c4130288a3cc53ff718331a,3549
     pantry-tree:
-      sha256: 9352ae872c2770a4ba243f4e64cc6cbbc8d242f417dbbdfaa19cfc0c7e5238cc
+      sha256: 28a1ae3f7f08d72536a11aceb8bfb367917402d52de7b1fa8d0c3f47d2aa6c65
       size: 1379
   original:
-    hackage: registry-hedgehog-0.8.0.0
+    hackage: registry-hedgehog-0.8.2.0
 snapshots:
 - completed:
-    sha256: b73b2b116143aea728c70e65c3239188998bac5bc3be56465813dacd74215dc5
-    size: 648424
-    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/20/1.yaml
-  original: lts-20.1
+    sha256: 08bd13ce621b41a8f5e51456b38d5b46d7783ce114a50ab604d6bbab0d002146
+    size: 720271
+    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/22/43.yaml
+  original: lts-22.43

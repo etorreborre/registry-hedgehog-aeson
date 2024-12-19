@@ -80,6 +80,7 @@ recursiveGens overrides =
       -- generator for a JSON value to be used in an object or an array
       <: fun (tag <$> genValueFor overrides :: Gen (Tag "Recurse" Value))
       -- simple, non-recursive, generators
+      <: simpleGens
       <: overrides
 
 -- | Set of generators for non-recursive JSON values
