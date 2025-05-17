@@ -1,11 +1,11 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.35.2.
+-- This file has been generated from package.yaml by hpack version 0.38.0.
 --
 -- see: https://github.com/sol/hpack
 
 name:           registry-hedgehog-aeson
-version:        0.3.1.1
+version:        0.3.1.2
 synopsis:       Hedgehog generators for Aeson
 description:    This library provides generators for Aeson values which can be easily customized.
 category:       Test
